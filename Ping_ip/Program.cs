@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.NetworkInformation;
 
 class Program
@@ -42,28 +43,28 @@ class Program
 
         Console.WriteLine("Rozpoczynanie pingowania...");
 
-        for (int i = startIP[3]; i <= endIP[3]; i++)
+        using (StreamWriter file = new StreamWriter("nieodpowiadajace_adresy.txt"))
         {
-            string ipAddress = $"{startIP[0]}.{startIP[1]}.{startIP[2]}.{i}";
+            for (int i = startIP[3]; i <= endIP[3]; i++)
+            {
+                string ipAddress = $"{startIP[0]}.{startIP[1]}.{startIP[2]}.{i}";
 
-            try
-            {
-                PingReply reply = pingSender.Send(ipAddress, timeout, buffer, options);
-                if (reply.Status == IPStatus.Success)
+                try
                 {
-                    Console.WriteLine($"Host {ipAddress} jest dostępny.");
+                    PingReply reply = pingSender.Send(ipAddress, timeout, buffer, options);
+                    if (reply.Status != IPStatus.Success)
+                    {
+                        Console.WriteLine($"Brak odpowiedzi z hosta {ipAddress}.");
+                        file.WriteLine(ipAddress);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Console.WriteLine($"Brak odpowiedzi z hosta {ipAddress}.");
+                    Console.WriteLine($"Wystąpił błąd podczas pingowania {ipAddress}: {ex.Message}");
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Wystąpił błąd podczas pingowania {ipAddress}: {ex.Message}");
             }
         }
 
-        Console.WriteLine("Pingowanie zakończone.");
+        Console.WriteLine("Pingowanie zakończone. Nieodpowiadające adresy zostały zapisane do pliku.");
     }
 }
